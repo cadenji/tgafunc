@@ -74,11 +74,31 @@ tga_image *tga_load(const char *file_name);
 
 // Save TGA image to file.
 // Return 0 if success, otherwise return nonzero value.
-int tga_save(const tga_image* image_ptr, const char *file_name);
+int tga_save(const tga_image *image_ptr, const char *file_name);
 
 // Release the memory space previously allocated by tga_load() or tga_create().
 // If image_ptr is a null pointer, the function does nothing.
 void tga_free(tga_image *image_ptr);
+
+// Returns pixel color at coordinates (x,y).
+// The coordinates start at upper left corner.
+// If the pixel coordinates are out of bounds (larger than width/height or
+// small than 0), they will be clamped.
+// This function only works on TGA_PIXEL_RGB24, TGA_PIXEL_ARGB32 pixel formats.
+// For other formats SetPixel is ignored.
+// If image_ptr is a null pointer, the function does nothing.
+void tga_get_pixel(tga_image *image_ptr, int x, int y, uint8_t *red,
+                   uint8_t *green, uint8_t *blue, uint8_t *alpha);
+
+// Sets pixel color at coordinates (x,y).
+// The coordinates start at upper left corner.
+// If the pixel coordinates are out of bounds (larger than width/height or
+// small than 0), they will be clamped.
+// This function only works on TGA_PIXEL_RGB24, TGA_PIXEL_ARGB32 pixel formats.
+// For other formats SetPixel is ignored.
+// If image_ptr is a null pointer, the function does nothing.
+void tga_set_pixel(tga_image *image_ptr, int x, int y, uint8_t red,
+                   uint8_t green, uint8_t blue, uint8_t alpha);
 
 // Flip the image horizontally.
 // If image_ptr is a null pointer, the function does nothing.

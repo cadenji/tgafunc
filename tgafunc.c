@@ -29,8 +29,6 @@
 
 #define MAX_WIDTH_OR_HEIGHT 65535
 
-#define HEADER_SIZE 18
-
 static tga_image *load_image(FILE *file_ptr);
 
 static uint8_t *get_pixel_pointer(tga_image *image_ptr, int x, int y);
@@ -140,6 +138,47 @@ void tga_free(tga_image *image_ptr)
 
         free(image_ptr);
     }
+}
+
+#define IS_OPERABLE_PIXEL_FORMAT(pixel_format)                           \
+    (pixel_format == TGA_PIXEL_RGB24 || pixel_format == TGA_PIXEL_ARGB32)
+
+void tga_get_pixel(tga_image *image_ptr, int x, int y, uint8_t *red,
+                   uint8_t *green, uint8_t *blue, uint8_t *alpha)
+{
+    if (image_ptr == NULL || image_ptr->data == NULL ||
+        !IS_OPERABLE_PIXEL_FORMAT(image_ptr->pixel_format))
+    {
+        return;
+    }
+
+    uint8_t *pixel_ptr = get_pixel_pointer(image_ptr, x, y);
+
+    *blue = pixel_ptr[0];
+    *green = pixel_ptr[1];
+    *red = pixel_ptr[2];
+    if (image_ptr->pixel_format == TGA_PIXEL_ARGB32)
+        *alpha = pixel_ptr[3];
+    else
+        *alpha = 255;
+}
+
+void tga_set_pixel(tga_image *image_ptr, int x, int y, uint8_t red,
+                   uint8_t green, uint8_t blue, uint8_t alpha)
+{
+    if (image_ptr == NULL || image_ptr->data == NULL ||
+        !IS_OPERABLE_PIXEL_FORMAT(image_ptr->pixel_format))
+    {
+        return;
+    }
+
+    uint8_t *pixel_ptr = get_pixel_pointer(image_ptr, x, y);
+
+    pixel_ptr[0] = blue;
+    pixel_ptr[1] = green;
+    pixel_ptr[2] = red;
+    if (image_ptr->pixel_format == TGA_PIXEL_ARGB32)
+        pixel_ptr[3] = alpha;
 }
 
 void tga_image_flip_h(tga_image *image_ptr)
@@ -497,6 +536,8 @@ static tga_image *load_image(FILE *file_ptr)
 
     return image_ptr;
 }
+
+#define HEADER_SIZE 18
 
 static int save_image(const tga_image *image_ptr, FILE *file_ptr)
 {
