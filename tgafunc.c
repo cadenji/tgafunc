@@ -74,6 +74,8 @@ tga_image *tga_create(int width, int height, tga_pixel_format format)
         free(image);
         return NULL;
     }
+    
+    memset(image->data, 0, image_size);
 
     image->width = (uint16_t)width;
     image->height = (uint16_t)height;
