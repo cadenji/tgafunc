@@ -70,11 +70,11 @@ static void load_test()
 
     const char *image_names[] =
     {
-        // "CBW8.TGA",      /* Not yet supported. */
+        "CBW8.TGA",
         // "CCM8.TGA",      /* Not yet supported. */
-        // "CTC16.TGA",     /* Not yet supported. */
-        // "CTC24.TGA",     /* Not yet supported. */
-        // "CTC32.TGA",     /* Not yet supported. */
+        "CTC16.TGA",
+        "CTC24.TGA",
+        "CTC32.TGA",
         "UBW8.TGA",
         // "UCM8.TGA",      /* Not yet supported. */
         "UTC16.TGA",
@@ -84,11 +84,11 @@ static void load_test()
 
     tga_pixel_format pixel_formats[] =
     {
-        // TGA_PIXEL_BW8,
+        TGA_PIXEL_BW8,
         // TGA_PIXEL_RGB555,
-        // TGA_PIXEL_RGB555,
-        // TGA_PIXEL_RGB24,
-        // TGA_PIXEL_ARGB32
+        TGA_PIXEL_RGB555,
+        TGA_PIXEL_RGB24,
+        TGA_PIXEL_ARGB32,
         TGA_PIXEL_BW8,
         // TGA_PIXEL_RGB555,
         TGA_PIXEL_RGB555,

@@ -43,6 +43,7 @@ tga_image *tga_create(int width, int height, tga_pixel_format format)
         return NULL;
     }
 
+    // Support up to 4 bytes of pixels.
     uint8_t pixel_size = 0;
     switch (format)
     {
@@ -67,15 +68,15 @@ tga_image *tga_create(int width, int height, tga_pixel_format format)
     if (image == NULL)
         return NULL;
 
-    size_t image_size = (size_t)width * height * pixel_size;
-    image->data = (uint8_t *)malloc(image_size);
+    size_t image_data_size = (size_t)width * height * pixel_size;
+    image->data = (uint8_t *)malloc(image_data_size);
     if (image->data == NULL)
     {
         free(image);
         return NULL;
     }
     
-    memset(image->data, 0, image_size);
+    memset(image->data, 0, image_data_size);
 
     image->width = (uint16_t)width;
     image->height = (uint16_t)height;
@@ -458,6 +459,61 @@ static int load_image_data_directly(tga_image *image_ptr, FILE *file_ptr)
     return 0;
 }
 
+// Read run-length encoded data into the image from the file stream.
+// 0​ upon success, nonzero value otherwise.
+static int load_image_data(tga_image *image_ptr, FILE *file_ptr)
+{
+    uint8_t *image_data_ptr = image_ptr->data;
+    size_t image_size = (size_t)image_ptr->width * image_ptr->height;
+    size_t pixel_bytes = image_ptr->bytes_per_pixel;
+    uint8_t is_run_length_packet = 0;
+    uint8_t pixel_count = 0;
+    uint8_t *pixel_buffer = (uint8_t *)malloc(pixel_bytes);
+    if (pixel_buffer == NULL)
+    {
+        PRINT_ERROR("Memory allocation error.");
+        return 1;
+    }
+    
+    for (; image_size > 0; --image_size)
+    {
+        if (pixel_count == 0)
+        {
+            uint8_t repetition_count_field;
+            if (fread(&repetition_count_field, 1, 1, file_ptr) != 1)
+                break;
+            is_run_length_packet = repetition_count_field & 0x80;
+            pixel_count = (repetition_count_field & 0x7F) + 1;
+            if (is_run_length_packet)
+            {
+                if (fread(pixel_buffer, 1, pixel_bytes, file_ptr) != pixel_bytes)
+                    break;
+            }
+        }
+        
+        if (is_run_length_packet)
+        {
+            memcpy(image_data_ptr, pixel_buffer, pixel_bytes);
+        }
+        else
+        {
+            if (fread(image_data_ptr, 1, pixel_bytes, file_ptr) != pixel_bytes)
+                break;
+        }
+
+        image_data_ptr += pixel_bytes;
+        --pixel_count;
+    }
+
+    free(pixel_buffer);
+    if (image_size != 0)
+    {
+        PRINT_ERROR("Cannot load image data.");
+        return 1;
+    }
+    return 0;
+}
+
 static tga_image *load_image(FILE *file_ptr)
 {
     tga_header header;
@@ -515,6 +571,8 @@ static tga_image *load_image(FILE *file_ptr)
     int has_error = 0;
     if (!is_color_mapped && !is_rle)
         has_error = load_image_data_directly(image_ptr, file_ptr);
+    else if (!is_color_mapped && is_rle)
+        has_error = load_image_data(image_ptr, file_ptr);
     else
     {
         // TODO: add more image type support.
