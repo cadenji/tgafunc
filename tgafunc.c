@@ -43,25 +43,24 @@ tga_image *tga_create(int width, int height, tga_pixel_format format)
         return NULL;
     }
 
-    // Support up to 4 bytes of pixels.
     uint8_t pixel_size = 0;
     switch (format)
     {
-        case TGA_PIXEL_BW8:
-            pixel_size = 1;
-            break;
-        case TGA_PIXEL_BW16:
-        case TGA_PIXEL_RGB555:
-            pixel_size = 2;
-            break;
-        case TGA_PIXEL_RGB24:
-            pixel_size = 3;
-            break;
-        case TGA_PIXEL_ARGB32:
-            pixel_size = 4;
-            break;
-        default:
-            return NULL;
+    case TGA_PIXEL_BW8:
+        pixel_size = 1;
+        break;
+    case TGA_PIXEL_BW16:
+    case TGA_PIXEL_RGB555:
+        pixel_size = 2;
+        break;
+    case TGA_PIXEL_RGB24:
+        pixel_size = 3;
+        break;
+    case TGA_PIXEL_ARGB32:
+        pixel_size = 4;
+        break;
+    default:
+        return NULL;
     }
 
     tga_image *image = (tga_image *)malloc(sizeof(tga_image));
@@ -75,7 +74,7 @@ tga_image *tga_create(int width, int height, tga_pixel_format format)
         free(image);
         return NULL;
     }
-    
+
     memset(image->data, 0, image_data_size);
 
     image->width = (uint16_t)width;
@@ -143,7 +142,7 @@ void tga_free(tga_image *image_ptr)
     }
 }
 
-#define IS_OPERABLE_PIXEL_FORMAT(pixel_format)                           \
+#define IS_OPERABLE_PIXEL_FORMAT(pixel_format) \
     (pixel_format == TGA_PIXEL_RGB24 || pixel_format == TGA_PIXEL_ARGB32)
 
 void tga_get_pixel(tga_image *image_ptr, int x, int y, uint8_t *red,
@@ -191,14 +190,13 @@ void tga_image_flip_h(tga_image *image_ptr)
     // The maximum possible number of bytes for a pixel is 4.
     uint8_t temp[4];
     int flip_num = image_ptr->width / 2;
-    
+
     for (int i = 0; i < flip_num; ++i)
     {
         for (int j = 0; j < image_ptr->height; ++j)
         {
             uint8_t *p1 = get_pixel_pointer(image_ptr, i, j);
-            uint8_t *p2 = get_pixel_pointer(image_ptr
-                                            , image_ptr->width - 1 - i, j);
+            uint8_t *p2 = get_pixel_pointer(image_ptr, image_ptr->width - 1 - i, j);
             // Swap two pixels.
             memcpy(temp, p1, image_ptr->bytes_per_pixel);
             memcpy(p1, p2, image_ptr->bytes_per_pixel);
@@ -220,8 +218,7 @@ void tga_image_flip_v(tga_image *image_ptr)
         for (int j = 0; j < image_ptr->width; ++j)
         {
             uint8_t *p1 = get_pixel_pointer(image_ptr, j, i);
-            uint8_t *p2 = get_pixel_pointer(image_ptr, j
-                                            , image_ptr->height - 1 -i);
+            uint8_t *p2 = get_pixel_pointer(image_ptr, j, image_ptr->height - 1 - i);
             // Swap two pixels.
             memcpy(temp, p1, image_ptr->bytes_per_pixel);
             memcpy(p1, p2, image_ptr->bytes_per_pixel);
@@ -261,6 +258,14 @@ typedef struct tga_header_s
     uint8_t image_descriptor;
 } tga_header;
 
+typedef struct tga_color_map_s
+{
+    uint16_t first_index;
+    uint16_t entry_count;
+    uint8_t bytes_per_entry;
+    uint8_t *pixels;
+} tga_color_map;
+
 // Gets raw pixel data from tga_image for reading or writing.
 // If the pixel coordinates are out of bounds (larger than width/height
 // or small than 0), they will be clamped.
@@ -270,14 +275,13 @@ static uint8_t *get_pixel_pointer(tga_image *image_ptr, int x, int y)
         x = 0;
     else if (x >= image_ptr->width)
         x = image_ptr->width - 1;
-    
+
     if (y < 0)
         y = 0;
     else if (y >= image_ptr->height)
         y = image_ptr->height - 1;
 
-    return image_ptr->data + (y * image_ptr->width + x)
-            * image_ptr->bytes_per_pixel;
+    return image_ptr->data + (y * image_ptr->width + x) * image_ptr->bytes_per_pixel;
 }
 
 static int has_read_file_error = 0;
@@ -333,22 +337,31 @@ static uint16_t read_uint16_le(FILE *file_ptr)
 // Calculate the pixel format according to the header.
 // Return 0 if success, otherwise return nonzero value means
 // the header is illegal.
+//
+// NOTE: if the supported values of map_entry_size and pixel_depth change.
+// Will have a huge impact on decode_data(), decode_data_rle() and
+// pixel_to_map_index() functions.
 static int get_pixel_format(tga_pixel_format *format, tga_header *header_ptr)
 {
     if (IS_COLOR_MAPPED(*header_ptr))
     {
-        switch (header_ptr->map_entry_size)
+        // If the supported pixel_depth is changed, remember to also change
+        // the pixel_to_map_index() function.
+        if (header_ptr->pixel_depth == 8)
         {
-        case 15:
-        case 16:
-            *format = TGA_PIXEL_RGB555;
-            return 0;
-        case 24:
-            *format = TGA_PIXEL_RGB24;
-            return 0;
-        case 32:
-            *format = TGA_PIXEL_ARGB32;
-            return 0;
+            switch (header_ptr->map_entry_size)
+            {
+            case 15:
+            case 16:
+                *format = TGA_PIXEL_RGB555;
+                return 0;
+            case 24:
+                *format = TGA_PIXEL_RGB24;
+                return 0;
+            case 32:
+                *format = TGA_PIXEL_ARGB32;
+                return 0;
+            }
         }
     }
     else if (IS_TRUE_COLOR(*header_ptr))
@@ -443,54 +456,105 @@ static int load_header_n_format(tga_header *header_ptr,
 }
 
 // Convert bits to integer bytes.
-#define BITS_TO_BYTES(bit_count) (((bit_count) - 1) / 8 + 1)
+#define BITS_TO_BYTES(bit_count) (((bit_count)-1) / 8 + 1)
 
-// Read data into the image from the file stream.
-// 0​ upon success, nonzero value otherwise.
-static int load_image_data_directly(tga_image *image_ptr, FILE *file_ptr)
+// Used for color mapped image decode.
+static uint16_t pixel_to_map_index(uint8_t *pixel_ptr, uint8_t pixel_bytes)
 {
-    size_t data_size = (size_t)image_ptr->width * image_ptr->height *
-                        image_ptr->bytes_per_pixel;
-    if (fread(image_ptr->data, 1, data_size, file_ptr) != data_size)
-    {
-        PRINT_ERROR("Cannot load image data.");
+    // Because only 8-bit index is supported now, so implemented in this way.
+    return pixel_ptr[0];
+}
+
+// Get the color of the specified index from the map.
+// Return 0 if success, otherwise return nonzero value.
+static int try_get_color_from_map(uint8_t *dest, uint16_t index,
+                                  tga_color_map *map)
+{
+    index -= map->first_index;
+    if (index < 0 && index >= map->entry_count)
         return 1;
-    }
+
+    memcpy(dest, map->pixels + map->bytes_per_entry * index,
+           map->bytes_per_entry);
     return 0;
 }
 
-// Read run-length encoded data into the image from the file stream.
+// Decode image data from file stream.
 // 0​ upon success, nonzero value otherwise.
-static int load_image_data(tga_image *image_ptr, FILE *file_ptr)
+static int decode_data(tga_image *image_ptr, uint8_t pixel_bytes,
+                       int is_color_mapped, tga_color_map *map,
+                       FILE *file_ptr)
+{
+    if (is_color_mapped)
+    {
+        uint8_t *image_data_ptr = image_ptr->data;
+        size_t image_size = (size_t)image_ptr->width * image_ptr->height;
+        for (; image_size > 0; --image_size)
+        {
+            if (fread(image_data_ptr, 1, pixel_bytes, file_ptr) != pixel_bytes)
+                break;
+            uint16_t index = pixel_to_map_index(image_data_ptr, pixel_bytes);
+            if (try_get_color_from_map(image_data_ptr, index, map))
+                break;
+            image_data_ptr += image_ptr->bytes_per_pixel;
+        }
+
+        if (image_size != 0)
+        {
+            PRINT_ERROR("Cannot load image data.");
+            return 1;
+        }
+    }
+    else
+    {
+        size_t data_size = (size_t)image_ptr->width * image_ptr->height *
+                           image_ptr->bytes_per_pixel;
+        if (fread(image_ptr->data, 1, data_size, file_ptr) != data_size)
+        {
+            PRINT_ERROR("Cannot load image data.");
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+// Decode image data with run-length encoding from file stream.
+// 0​ upon success, nonzero value otherwise.
+static int decode_data_rle(tga_image *image_ptr, uint8_t pixel_bytes,
+                           int is_color_mapped, tga_color_map *map,
+                           FILE *file_ptr)
 {
     uint8_t *image_data_ptr = image_ptr->data;
     size_t image_size = (size_t)image_ptr->width * image_ptr->height;
-    size_t pixel_bytes = image_ptr->bytes_per_pixel;
     uint8_t is_run_length_packet = 0;
-    uint8_t pixel_count = 0;
-    uint8_t *pixel_buffer = (uint8_t *)malloc(pixel_bytes);
-    if (pixel_buffer == NULL)
-    {
-        PRINT_ERROR("Memory allocation error.");
-        return 1;
-    }
-    
+    uint8_t packet_count = 0;
+    // The buffer size is directly related to the implementation of
+    // get_pixel_format() function.
+    uint8_t pixel_buffer[4];
+
     for (; image_size > 0; --image_size)
     {
-        if (pixel_count == 0)
+        if (packet_count == 0)
         {
             uint8_t repetition_count_field;
             if (fread(&repetition_count_field, 1, 1, file_ptr) != 1)
                 break;
             is_run_length_packet = repetition_count_field & 0x80;
-            pixel_count = (repetition_count_field & 0x7F) + 1;
+            packet_count = (repetition_count_field & 0x7F) + 1;
             if (is_run_length_packet)
             {
                 if (fread(pixel_buffer, 1, pixel_bytes, file_ptr) != pixel_bytes)
                     break;
+                if (is_color_mapped)
+                {
+                    uint16_t index = pixel_to_map_index(image_data_ptr, pixel_bytes);
+                    if (try_get_color_from_map(pixel_buffer, index, map))
+                        break;
+                }
             }
         }
-        
+
         if (is_run_length_packet)
         {
             memcpy(image_data_ptr, pixel_buffer, pixel_bytes);
@@ -499,13 +563,20 @@ static int load_image_data(tga_image *image_ptr, FILE *file_ptr)
         {
             if (fread(image_data_ptr, 1, pixel_bytes, file_ptr) != pixel_bytes)
                 break;
+            if (is_color_mapped)
+            {
+                uint16_t index = pixel_to_map_index(image_data_ptr, pixel_bytes);
+                if (try_get_color_from_map(image_data_ptr, index, map))
+                {
+                    break;
+                }
+            }
         }
 
-        image_data_ptr += pixel_bytes;
-        --pixel_count;
+        --packet_count;
+        image_data_ptr += image_ptr->bytes_per_pixel;
     }
 
-    free(pixel_buffer);
     if (image_size != 0)
     {
         PRINT_ERROR("Cannot load image data.");
@@ -531,21 +602,25 @@ static tga_image *load_image(FILE *file_ptr)
     int is_color_mapped = IS_COLOR_MAPPED(header);
     int is_rle = IS_RLE(header);
 
-    // Handle color map.
-    uint8_t *color_map_ptr = NULL;
+    // Handle color map field.
+    tga_color_map color_map;
+    color_map.pixels = NULL;
     size_t map_size = header.map_length * BITS_TO_BYTES(header.map_entry_size);
     if (is_color_mapped)
     {
-        color_map_ptr = (uint8_t *)malloc(map_size);
-        if (color_map_ptr == NULL)
+        color_map.first_index = header.map_first_entry;
+        color_map.entry_count = header.map_length;
+        color_map.bytes_per_entry = BITS_TO_BYTES(header.map_entry_size);
+        color_map.pixels = (uint8_t *)malloc(map_size);
+        if (color_map.pixels == NULL)
         {
             PRINT_ERROR("Memory allocation error.");
             return NULL;
         }
-        if (fread(color_map_ptr, 1, map_size, file_ptr) != map_size)
+        if (fread(color_map.pixels, 1, map_size, file_ptr) != map_size)
         {
             PRINT_ERROR("Cannot load color map data.");
-            free(color_map_ptr);
+            free(color_map.pixels);
             return NULL;
         }
     }
@@ -563,23 +638,20 @@ static tga_image *load_image(FILE *file_ptr)
     if (image_ptr == NULL)
     {
         PRINT_ERROR("Memory allocation error.");
-        free(color_map_ptr);
+        free(color_map.pixels);
         return NULL;
     }
 
     // Load image data.
-    int has_error = 0;
-    if (!is_color_mapped && !is_rle)
-        has_error = load_image_data_directly(image_ptr, file_ptr);
-    else if (!is_color_mapped && is_rle)
-        has_error = load_image_data(image_ptr, file_ptr);
+    int has_error;
+    if (is_rle)
+        has_error = decode_data_rle(image_ptr, BITS_TO_BYTES(header.pixel_depth),
+                                    is_color_mapped, &color_map, file_ptr);
     else
-    {
-        // TODO: add more image type support.
-        has_error = 1;
-    }
+        has_error = decode_data(image_ptr, BITS_TO_BYTES(header.pixel_depth),
+                                is_color_mapped, &color_map, file_ptr);
 
-    free(color_map_ptr);
+    free(color_map.pixels);
     if (has_error)
     {
         tga_free(image_ptr);
@@ -625,7 +697,7 @@ static int save_image(const tga_image *image_ptr, FILE *file_ptr)
     {
         header[17] = 0x20;
     }
-    
+
     if (fwrite(header, 1, HEADER_SIZE, file_ptr) != HEADER_SIZE)
     {
         PRINT_ERROR("Cannot save TGA header.");
