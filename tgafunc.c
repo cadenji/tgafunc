@@ -548,7 +548,7 @@ static int decode_data_rle(tga_image *image_ptr, uint8_t pixel_bytes,
                     break;
                 if (is_color_mapped)
                 {
-                    uint16_t index = pixel_to_map_index(image_data_ptr, pixel_bytes);
+                    uint16_t index = pixel_to_map_index(pixel_buffer, pixel_bytes);
                     if (try_get_color_from_map(pixel_buffer, index, map))
                         break;
                 }
@@ -557,7 +557,7 @@ static int decode_data_rle(tga_image *image_ptr, uint8_t pixel_bytes,
 
         if (is_run_length_packet)
         {
-            memcpy(image_data_ptr, pixel_buffer, pixel_bytes);
+            memcpy(image_data_ptr, pixel_buffer, image_ptr->bytes_per_pixel);
         }
         else
         {
