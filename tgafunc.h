@@ -9,8 +9,8 @@
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -27,8 +27,7 @@
 
 // Pixel format used when creating a tga_image.
 // Note that the pixel data are all in little-endian.
-typedef enum tga_pixel_format_e
-{
+typedef enum tga_pixel_format_e {
     // Single channel format represents grayscale, 8-bit integer.
     TGA_PIXEL_BW8,
 
@@ -49,8 +48,7 @@ typedef enum tga_pixel_format_e
 
 // DO NOT instantiate this object directly.
 // Use tga_load() or tga_create() to create.
-typedef struct tga_image_s
-{
+typedef struct tga_image_s {
     uint16_t width;
     uint16_t height;
 

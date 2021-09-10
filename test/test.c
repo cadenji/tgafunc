@@ -9,8 +9,8 @@
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -23,14 +23,14 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "tgafunc.h"
 
 static void create_test();
 
 static void load_test();
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     create_test();
     load_test();
 
@@ -38,8 +38,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-static void create_test()
-{
+static void create_test() {
     tga_image *image_ptr;
     int max_width_or_height = 65535;
 
@@ -62,57 +61,35 @@ static void create_test()
     tga_free(image_ptr);
 }
 
-static void load_test()
-{
+static void load_test() {
     int image_dimension = 128;
 
     char image_path[] = "test/images/";
 
-    const char *image_names[] =
-    {
-        "CBW8.TGA",
-        "CCM8.TGA",
-        "CTC16.TGA",
-        "CTC24.TGA",
-        "CTC32.TGA",
-        "UBW8.TGA",
-        "UCM8.TGA",
-        "UTC16.TGA",
-        "UTC24.TGA",
-        "UTC32.TGA"
-    };
+    const char *image_names[] = {
+        "CBW8.TGA", "CCM8.TGA", "CTC16.TGA", "CTC24.TGA", "CTC32.TGA",
+        "UBW8.TGA", "UCM8.TGA", "UTC16.TGA", "UTC24.TGA", "UTC32.TGA"};
 
-    tga_pixel_format pixel_formats[] =
-    {
-        TGA_PIXEL_BW8,
-        TGA_PIXEL_RGB555,
-        TGA_PIXEL_RGB555,
-        TGA_PIXEL_RGB24,
-        TGA_PIXEL_ARGB32,
-        TGA_PIXEL_BW8,
-        TGA_PIXEL_RGB555,
-        TGA_PIXEL_RGB555,
-        TGA_PIXEL_RGB24,
-        TGA_PIXEL_ARGB32
-    };
+    tga_pixel_format pixel_formats[] = {
+        TGA_PIXEL_BW8,    TGA_PIXEL_RGB555, TGA_PIXEL_RGB555, TGA_PIXEL_RGB24,
+        TGA_PIXEL_ARGB32, TGA_PIXEL_BW8,    TGA_PIXEL_RGB555, TGA_PIXEL_RGB555,
+        TGA_PIXEL_RGB24,  TGA_PIXEL_ARGB32};
 
     int image_count = sizeof(image_names) / sizeof(image_names[0]);
     char image[25];
     int loop;
 
-    for (loop = 0; loop < image_count; ++loop)
-    {
+    for (loop = 0; loop < image_count; ++loop) {
         // Create file name.
         memcpy(image, image_path, sizeof(image_path));
         strcat(image, image_names[loop]);
-        
+
         // Load the image and check the file information.
         tga_image *image_ptr = tga_load(image);
         assert(image_ptr != NULL);
         if (image_ptr->width != image_dimension ||
             image_ptr->height != image_dimension ||
-            image_ptr->pixel_format != pixel_formats[loop])
-        {
+            image_ptr->pixel_format != pixel_formats[loop]) {
             tga_free(image_ptr);
             break;
         }
