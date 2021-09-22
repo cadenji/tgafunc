@@ -26,9 +26,9 @@
 
 #include "tgafunc.h"
 
-static void create_test();
+static void create_test(void);
 
-static void load_test();
+static void load_test(void);
 
 int main(int argc, char *argv[]) {
     create_test();
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-static void create_test() {
+static void create_test(void) {
     tga_image *image_ptr;
     int max_width_or_height = 65535;
 
@@ -61,10 +61,10 @@ static void create_test() {
     tga_free(image_ptr);
 }
 
-static void load_test() {
+static void load_test(void) {
     int image_dimension = 128;
 
-    char image_path[] = "test/images/";
+    char image_path[] = "images/";
 
     const char *image_names[] = {
         "CBW8.TGA", "CCM8.TGA", "CTC16.TGA", "CTC24.TGA", "CTC32.TGA",

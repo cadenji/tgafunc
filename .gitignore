@@ -61,3 +61,5 @@ Thumbs.db
 
 # IDE and editor generated files
 /.vscode/
+
+/build/
