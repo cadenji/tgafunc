@@ -58,3 +58,6 @@ dkms.conf
 # Windows system files
 [Dd]esktop.ini
 Thumbs.db
+
+# IDE and editor generated files
+/.vscode/
