@@ -27,7 +27,7 @@
 
 // Pixel format used when creating a tga_image.
 // Note that the pixel data are all in little-endian.
-typedef enum tga_pixel_format_e {
+enum tga_pixel_format {
     // Single channel format represents grayscale, 8-bit integer.
     TGA_PIXEL_BW8,
 
@@ -44,7 +44,7 @@ typedef enum tga_pixel_format_e {
 
     // RGB color with alpha format, 8-bit per channel.
     TGA_PIXEL_ARGB32
-} tga_pixel_format;
+};
 
 // DO NOT instantiate this object directly.
 // Use tga_load() or tga_create() to create.
@@ -52,7 +52,7 @@ typedef struct tga_image_s {
     uint16_t width;
     uint16_t height;
 
-    tga_pixel_format pixel_format;
+    enum tga_pixel_format pixel_format;
 
     // Means the number of bytes per pixel,
     // this value is based on the pixel format.
@@ -63,7 +63,7 @@ typedef struct tga_image_s {
 
 // Create a new empty image.
 // Reture tga_image pointer if success, return NULL if allocation failure.
-tga_image *tga_create(int width, int height, tga_pixel_format format);
+tga_image *tga_create(int width, int height, enum tga_pixel_format format);
 
 // Load TGA image from file.
 // Reture tga_image pointer if success, return NULL if read file fail or

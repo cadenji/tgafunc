@@ -53,7 +53,7 @@ static void create_test(void) {
     image_ptr = tga_create(32, max_width_or_height + 1, TGA_PIXEL_RGB24);
     assert(image_ptr == NULL);
     // Wrong pixel format check.
-    image_ptr = tga_create(32, 32, (tga_pixel_format)100);
+    image_ptr = tga_create(32, 32, (enum tga_pixel_format)100);
     assert(image_ptr == NULL);
 
     image_ptr = tga_create(128, 128, TGA_PIXEL_RGB24);
@@ -70,7 +70,7 @@ static void load_test(void) {
         "CBW8.TGA", "CCM8.TGA", "CTC16.TGA", "CTC24.TGA", "CTC32.TGA",
         "UBW8.TGA", "UCM8.TGA", "UTC16.TGA", "UTC24.TGA", "UTC32.TGA"};
 
-    tga_pixel_format pixel_formats[] = {
+    enum tga_pixel_format pixel_formats[] = {
         TGA_PIXEL_BW8,    TGA_PIXEL_RGB555, TGA_PIXEL_RGB555, TGA_PIXEL_RGB24,
         TGA_PIXEL_ARGB32, TGA_PIXEL_BW8,    TGA_PIXEL_RGB555, TGA_PIXEL_RGB555,
         TGA_PIXEL_RGB24,  TGA_PIXEL_ARGB32};

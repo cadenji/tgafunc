@@ -36,7 +36,7 @@ static uint8_t *get_pixel_pointer(tga_image *image_ptr, int x, int y);
 
 static int save_image(const tga_image *image_ptr, FILE *file_ptr);
 
-tga_image *tga_create(int width, int height, tga_pixel_format format) {
+tga_image *tga_create(int width, int height, enum tga_pixel_format format) {
     if (width <= 0 || width > MAX_WIDTH_OR_HEIGHT || height <= 0 ||
         height > MAX_WIDTH_OR_HEIGHT) {
         return NULL;
@@ -212,7 +212,7 @@ enum tga_image_type {
     TGA_TYPE_RLE_GRAYSCALE = 11
 };
 
-typedef struct tga_header_s {
+struct tga_header {
     uint8_t id_length;
     uint8_t map_type;
     uint8_t image_type;
@@ -229,14 +229,14 @@ typedef struct tga_header_s {
     uint16_t image_height;
     uint8_t pixel_depth;
     uint8_t image_descriptor;
-} tga_header;
+};
 
-typedef struct tga_color_map_s {
+struct tga_color_map {
     uint16_t first_index;
     uint16_t entry_count;
     uint8_t bytes_per_entry;
     uint8_t *pixels;
-} tga_color_map;
+};
 
 // Gets raw pixel data from tga_image for reading or writing.
 // If the pixel coordinates are out of bounds (larger than width/height
@@ -312,7 +312,8 @@ static uint16_t read_uint16_le(FILE *file_ptr) {
 // NOTE: if the supported values of map_entry_size and pixel_depth change.
 // Will have a huge impact on decode_data(), decode_data_rle() and
 // pixel_to_map_index() functions.
-static int get_pixel_format(tga_pixel_format *format, tga_header *header_ptr) {
+static int get_pixel_format(enum tga_pixel_format *format,
+                            struct tga_header *header_ptr) {
     if (IS_COLOR_MAPPED(*header_ptr)) {
         // If the supported pixel_depth is changed, remember to also change
         // the pixel_to_map_index() function.
@@ -358,8 +359,8 @@ static int get_pixel_format(tga_pixel_format *format, tga_header *header_ptr) {
 
 // Load TGA header and pixel format from file stream.
 // Return 0 if loaded successfully, nonzero value otherwise.
-static int load_header_n_format(tga_header *header_ptr,
-                                tga_pixel_format *pixel_format,
+static int load_header_n_format(struct tga_header *header_ptr,
+                                enum tga_pixel_format *pixel_format,
                                 FILE *file_ptr) {
     has_read_file_error = 0;
 
@@ -422,7 +423,7 @@ static uint16_t pixel_to_map_index(uint8_t *pixel_ptr, uint8_t pixel_bytes) {
 // Get the color of the specified index from the map.
 // Return 0 if success, otherwise return nonzero value.
 static int try_get_color_from_map(uint8_t *dest, uint16_t index,
-                                  tga_color_map *map) {
+                                  struct tga_color_map *map) {
     index -= map->first_index;
     if (index < 0 && index >= map->entry_count) return 1;
 
@@ -434,7 +435,7 @@ static int try_get_color_from_map(uint8_t *dest, uint16_t index,
 // Decode image data from file stream.
 // 0​ upon success, nonzero value otherwise.
 static int decode_data(tga_image *image_ptr, uint8_t pixel_bytes,
-                       int is_color_mapped, tga_color_map *map,
+                       int is_color_mapped, struct tga_color_map *map,
                        FILE *file_ptr) {
     if (is_color_mapped) {
         uint8_t *image_data_ptr = image_ptr->data;
@@ -466,7 +467,7 @@ static int decode_data(tga_image *image_ptr, uint8_t pixel_bytes,
 // Decode image data with run-length encoding from file stream.
 // 0​ upon success, nonzero value otherwise.
 static int decode_data_rle(tga_image *image_ptr, uint8_t pixel_bytes,
-                           int is_color_mapped, tga_color_map *map,
+                           int is_color_mapped, struct tga_color_map *map,
                            FILE *file_ptr) {
     uint8_t *image_data_ptr = image_ptr->data;
     size_t image_size = (size_t)image_ptr->width * image_ptr->height;
@@ -520,8 +521,8 @@ static int decode_data_rle(tga_image *image_ptr, uint8_t pixel_bytes,
 }
 
 static tga_image *load_image(FILE *file_ptr) {
-    tga_header header;
-    tga_pixel_format pixel_format;
+    struct tga_header header;
+    enum tga_pixel_format pixel_format;
     if (load_header_n_format(&header, &pixel_format, file_ptr)) return NULL;
 
     // No need to handle the content of the ID field, so skip directly.
@@ -534,7 +535,7 @@ static tga_image *load_image(FILE *file_ptr) {
     int is_rle = IS_RLE(header);
 
     // Handle color map field.
-    tga_color_map color_map;
+    struct tga_color_map color_map;
     color_map.pixels = NULL;
     size_t map_size = header.map_length * BITS_TO_BYTES(header.map_entry_size);
     if (is_color_mapped) {
