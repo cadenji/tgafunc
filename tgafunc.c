@@ -22,6 +22,7 @@
 
 #include "tgafunc.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -252,13 +253,13 @@ static uint8_t *get_pixel_pointer(tga_image *image_ptr, int x, int y) {
            (y * image_ptr->width + x) * image_ptr->bytes_per_pixel;
 }
 
-static int has_read_file_error = 0;
+static bool has_read_file_error = false;
 
 // Read a 8-bit integer from the file stream.
 static uint8_t read_uint8(FILE *file_ptr) {
     uint8_t value;
     if (fread(&value, 1, 1, file_ptr) != 1) {
-        has_read_file_error = 1;
+        has_read_file_error = true;
         return 0;
     }
     return value;
@@ -270,7 +271,7 @@ static uint8_t read_uint8(FILE *file_ptr) {
 static uint16_t read_uint16_le(FILE *file_ptr) {
     uint8_t buffer[2];
     if (fread(&buffer, 1, 2, file_ptr) != 2) {
-        has_read_file_error = 1;
+        has_read_file_error = true;
         return 0;
     }
     return buffer[0] + (((uint16_t)buffer[1]) << 8);
@@ -301,15 +302,14 @@ static uint16_t read_uint16_le(FILE *file_ptr) {
      (header).image_type == TGA_TYPE_RLE_TRUE_COLOR ||   \
      (header).image_type == TGA_TYPE_RLE_GRAYSCALE)
 
-// Calculate the pixel format according to the header.
-// Return 0 if success, otherwise return nonzero value means
-// the header is illegal.
+// Gets the pixel format according to the header.
+// Returns false means the header is not illegal, otherwise returns true.
 //
 // NOTE: if the supported values of map_entry_size and pixel_depth change.
 // Will have a huge impact on decode_data(), decode_data_rle() and
 // pixel_to_map_index() functions.
-static int get_pixel_format(enum tga_pixel_format *format,
-                            struct tga_header *header_ptr) {
+static bool get_pixel_format(enum tga_pixel_format *format,
+                             struct tga_header *header_ptr) {
     if (IS_COLOR_MAPPED(*header_ptr)) {
         // If the supported pixel_depth is changed, remember to also change
         // the pixel_to_map_index() function.
@@ -318,46 +318,45 @@ static int get_pixel_format(enum tga_pixel_format *format,
                 case 15:
                 case 16:
                     *format = TGA_PIXEL_RGB555;
-                    return 0;
+                    return false;
                 case 24:
                     *format = TGA_PIXEL_RGB24;
-                    return 0;
+                    return false;
                 case 32:
                     *format = TGA_PIXEL_ARGB32;
-                    return 0;
+                    return false;
             }
         }
     } else if (IS_TRUE_COLOR(*header_ptr)) {
         switch (header_ptr->pixel_depth) {
             case 16:
                 *format = TGA_PIXEL_RGB555;
-                return 0;
+                return false;
             case 24:
                 *format = TGA_PIXEL_RGB24;
-                return 0;
+                return false;
             case 32:
                 *format = TGA_PIXEL_ARGB32;
-                return 0;
+                return false;
         }
     } else if (IS_GRAYSCALE(*header_ptr)) {
         switch (header_ptr->pixel_depth) {
             case 8:
                 *format = TGA_PIXEL_BW8;
-                return 0;
+                return false;
             case 16:
                 *format = TGA_PIXEL_BW16;
-                return 0;
+                return false;
         }
     }
-
-    return 1;
+    return true;
 }
 
 // Load TGA header and pixel format from file stream.
 static enum tga_error load_header_n_format(struct tga_header *header_ptr,
                                            enum tga_pixel_format *pixel_format,
                                            FILE *file_ptr) {
-    has_read_file_error = 0;
+    has_read_file_error = false;
 
     header_ptr->id_length = read_uint8(file_ptr);
     header_ptr->map_type = read_uint8(file_ptr);
@@ -403,21 +402,22 @@ static uint16_t pixel_to_map_index(uint8_t *pixel_ptr, uint8_t pixel_bytes) {
     return pixel_ptr[0];
 }
 
-// Get the color of the specified index from the map.
-// Return 0 if success, otherwise return nonzero value.
-static int try_get_color_from_map(uint8_t *dest, uint16_t index,
-                                  struct tga_color_map *map) {
+// Gets the color of the specified index from the map.
+// Returns false means no error, otherwise returns true.
+static bool try_get_color_from_map(uint8_t *dest, uint16_t index,
+                                   struct tga_color_map *map) {
     index -= map->first_index;
-    if (index < 0 && index >= map->entry_count) return 1;
-
+    if (index < 0 && index >= map->entry_count) {
+        return true;
+    }
     memcpy(dest, map->pixels + map->bytes_per_entry * index,
            map->bytes_per_entry);
-    return 0;
+    return false;
 }
 
 // Decode image data from file stream.
 static enum tga_error decode_data(tga_image *image_ptr, uint8_t pixel_bytes,
-                                  int is_color_mapped,
+                                  bool is_color_mapped,
                                   struct tga_color_map *map, FILE *file_ptr) {
     if (is_color_mapped) {
         uint8_t *image_data_ptr = image_ptr->data;
@@ -450,7 +450,7 @@ static enum tga_error decode_data(tga_image *image_ptr, uint8_t pixel_bytes,
 
 // Decode image data with run-length encoding from file stream.
 static enum tga_error decode_data_rle(tga_image *image_ptr, uint8_t pixel_bytes,
-                                      int is_color_mapped,
+                                      bool is_color_mapped,
                                       struct tga_color_map *map,
                                       FILE *file_ptr) {
     uint8_t *image_data_ptr = image_ptr->data;
@@ -526,8 +526,8 @@ static enum tga_error load_image(tga_image **image_out, FILE *file_ptr) {
         return TGA_ERROR_FILE_CANNOT_READ;
     }
 
-    int is_color_mapped = IS_COLOR_MAPPED(header);
-    int is_rle = IS_RLE(header);
+    bool is_color_mapped = IS_COLOR_MAPPED(header);
+    bool is_rle = IS_RLE(header);
 
     // Handle color map field.
     struct tga_color_map color_map;
