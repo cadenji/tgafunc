@@ -39,26 +39,27 @@ int main(int argc, char *argv[]) {
 }
 
 static void create_test(void) {
-    tga_image *image_ptr;
-    int max_width_or_height = 65535;
+    tga_image *image;
+    enum tga_error error_code;
+    int oversize = 65535 + 1;
 
     // image size cannot be less than 1.
-    image_ptr = tga_create(0, 32, TGA_PIXEL_RGB24);
-    assert(image_ptr == NULL);
-    image_ptr = tga_create(32, 0, TGA_PIXEL_RGB24);
-    assert(image_ptr == NULL);
+    error_code = tga_create(&image, 0, 32, TGA_PIXEL_RGB24);
+    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
+    error_code = tga_create(&image, 32, 0, TGA_PIXEL_RGB24);
+    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
     // Image size cannot be greater than 65535.
-    image_ptr = tga_create(max_width_or_height + 1, 32, TGA_PIXEL_RGB24);
-    assert(image_ptr == NULL);
-    image_ptr = tga_create(32, max_width_or_height + 1, TGA_PIXEL_RGB24);
-    assert(image_ptr == NULL);
+    error_code = tga_create(&image, oversize, 32, TGA_PIXEL_RGB24);
+    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
+    error_code = tga_create(&image, 32, oversize, TGA_PIXEL_RGB24);
+    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
     // Wrong pixel format check.
-    image_ptr = tga_create(32, 32, (enum tga_pixel_format)100);
-    assert(image_ptr == NULL);
+    error_code = tga_create(&image, 32, 32, (enum tga_pixel_format)100);
+    assert(error_code == TGA_ERROR_UNSUPPORTED_PIXEL_FORMAT);
 
-    image_ptr = tga_create(128, 128, TGA_PIXEL_RGB24);
-    assert(image_ptr != NULL);
-    tga_free(image_ptr);
+    error_code = tga_create(&image, 128, 128, TGA_PIXEL_RGB24);
+    assert(error_code == TGA_NO_ERROR);
+    tga_free(image);
 }
 
 static void load_test(void) {
@@ -66,7 +67,7 @@ static void load_test(void) {
 
     char image_path[] = "images/";
 
-    const char *image_names[] = {
+    const char *image_name_list[] = {
         "CBW8.TGA", "CCM8.TGA", "CTC16.TGA", "CTC24.TGA", "CTC32.TGA",
         "UBW8.TGA", "UCM8.TGA", "UTC16.TGA", "UTC24.TGA", "UTC32.TGA"};
 
@@ -75,26 +76,26 @@ static void load_test(void) {
         TGA_PIXEL_ARGB32, TGA_PIXEL_BW8,    TGA_PIXEL_RGB555, TGA_PIXEL_RGB555,
         TGA_PIXEL_RGB24,  TGA_PIXEL_ARGB32};
 
-    int image_count = sizeof(image_names) / sizeof(image_names[0]);
-    char image[25];
+    int image_count = sizeof(image_name_list) / sizeof(image_name_list[0]);
+    char image_name[25];
     int loop;
 
     for (loop = 0; loop < image_count; ++loop) {
         // Create file name.
-        memcpy(image, image_path, sizeof(image_path));
-        strcat(image, image_names[loop]);
+        memcpy(image_name, image_path, sizeof(image_path));
+        strcat(image_name, image_name_list[loop]);
 
         // Load the image and check the file information.
-        tga_image *image_ptr = tga_load(image);
-        assert(image_ptr != NULL);
-        if (image_ptr->width != image_dimension ||
-            image_ptr->height != image_dimension ||
-            image_ptr->pixel_format != pixel_formats[loop]) {
-            tga_free(image_ptr);
+        tga_image *image;
+        enum tga_error error_code = tga_load(&image, image_name);
+        assert(error_code == TGA_NO_ERROR);
+        if (image->width != image_dimension ||
+            image->height != image_dimension ||
+            image->pixel_format != pixel_formats[loop]) {
+            tga_free(image);
             break;
         }
-        tga_free(image_ptr);
+        tga_free(image);
     }
-
     assert(loop == image_count);
 }

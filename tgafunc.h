@@ -46,6 +46,18 @@ enum tga_pixel_format {
     TGA_PIXEL_ARGB32
 };
 
+enum tga_error {
+    TGA_NO_ERROR = 0,
+    TGA_ERROR_OUT_OF_MEMORY,
+    TGA_ERROR_FILE_CANNOT_READ,
+    TGA_ERROR_FILE_CANNOT_WRITE,
+    TGA_ERROR_NO_DATA,
+    TGA_ERROR_UNSUPPORTED_COLOR_MAP_TYPE,
+    TGA_ERROR_UNSUPPORTED_IMAGE_TYPE,
+    TGA_ERROR_UNSUPPORTED_PIXEL_FORMAT,
+    TGA_ERROR_INVALID_IMAGE_DIMENSISN
+};
+
 // DO NOT instantiate this object directly.
 // Use tga_load() or tga_create() to create.
 typedef struct tga_image_s {
@@ -62,21 +74,18 @@ typedef struct tga_image_s {
 } tga_image;
 
 // Create a new empty image.
-// Reture tga_image pointer if success, return NULL if allocation failure.
-tga_image *tga_create(int width, int height, enum tga_pixel_format format);
+enum tga_error tga_create(tga_image **image_out, int width, int height,
+                          enum tga_pixel_format format);
 
 // Load TGA image from file.
-// Reture tga_image pointer if success, return NULL if read file fail or
-// if the image is invalid.
-tga_image *tga_load(const char *file_name);
+enum tga_error tga_load(tga_image **image_out, const char *file_name);
 
 // Save TGA image to file.
-// Return 0 if success, otherwise return nonzero value.
-int tga_save(const tga_image *image_ptr, const char *file_name);
+enum tga_error tga_save(const tga_image *image, const char *file_name);
 
 // Release the memory space previously allocated by tga_load() or tga_create().
-// If image_ptr is a null pointer, the function does nothing.
-void tga_free(tga_image *image_ptr);
+// If image is a null pointer, the function does nothing.
+void tga_free(tga_image *image);
 
 // Returns pixel color at coordinates (x,y).
 // The coordinates start at upper left corner.
