@@ -397,7 +397,7 @@ static enum tga_error load_header_n_format(struct tga_header *header_ptr,
 #define BITS_TO_BYTES(bit_count) (((bit_count)-1) / 8 + 1)
 
 // Used for color mapped image decode.
-static uint16_t pixel_to_map_index(uint8_t *pixel_ptr, uint8_t pixel_bytes) {
+static inline uint16_t pixel_to_map_index(uint8_t *pixel_ptr) {
     // Because only 8-bit index is supported now, so implemented in this way.
     return pixel_ptr[0];
 }
@@ -427,7 +427,7 @@ static enum tga_error decode_data(tga_image *image_ptr, uint8_t pixel_bytes,
                 pixel_bytes) {
                 break;
             }
-            uint16_t index = pixel_to_map_index(image_data_ptr, pixel_bytes);
+            uint16_t index = pixel_to_map_index(image_data_ptr);
             if (try_get_color_from_map(image_data_ptr, index, map)) {
                 break;
             }
@@ -476,7 +476,7 @@ static enum tga_error decode_data_rle(tga_image *image_ptr, uint8_t pixel_bytes,
                 }
                 if (is_color_mapped) {
                     uint16_t index;
-                    index = pixel_to_map_index(pixel_buffer, pixel_bytes);
+                    index = pixel_to_map_index(pixel_buffer);
                     if (try_get_color_from_map(pixel_buffer, index, map)) {
                         break;
                     }
@@ -493,7 +493,7 @@ static enum tga_error decode_data_rle(tga_image *image_ptr, uint8_t pixel_bytes,
             }
             if (is_color_mapped) {
                 uint16_t index;
-                index = pixel_to_map_index(image_data_ptr, pixel_bytes);
+                index = pixel_to_map_index(image_data_ptr);
                 if (try_get_color_from_map(image_data_ptr, index, map)) {
                     break;
                 }
