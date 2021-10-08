@@ -457,9 +457,7 @@ static enum tga_error decode_data_rle(tga_image *image_ptr, uint8_t pixel_bytes,
     size_t image_size = (size_t)image_ptr->width * image_ptr->height;
     uint8_t is_run_length_packet = 0;
     uint8_t packet_count = 0;
-    // The buffer size is directly related to the implementation of
-    // get_pixel_format() function.
-    uint8_t pixel_buffer[4];
+    uint8_t pixel_buffer[is_color_mapped ? map->bytes_per_entry : pixel_bytes];
 
     for (; image_size > 0; --image_size) {
         if (packet_count == 0) {
