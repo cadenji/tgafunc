@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -39,27 +40,29 @@ int main(int argc, char *argv[]) {
 }
 
 static void create_test(void) {
-    tga_image *image;
+    uint8_t *data;
+    tga_info *info;
     enum tga_error error_code;
     int oversize = 65535 + 1;
 
     // image size cannot be less than 1.
-    error_code = tga_create(&image, 0, 32, TGA_PIXEL_RGB24);
+    error_code = tga_create(&data, &info, 0, 32, TGA_PIXEL_RGB24);
     assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
-    error_code = tga_create(&image, 32, 0, TGA_PIXEL_RGB24);
+    error_code = tga_create(&data, &info, 32, 0, TGA_PIXEL_RGB24);
     assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
     // Image size cannot be greater than 65535.
-    error_code = tga_create(&image, oversize, 32, TGA_PIXEL_RGB24);
+    error_code = tga_create(&data, &info, oversize, 32, TGA_PIXEL_RGB24);
     assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
-    error_code = tga_create(&image, 32, oversize, TGA_PIXEL_RGB24);
+    error_code = tga_create(&data, &info, 32, oversize, TGA_PIXEL_RGB24);
     assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
     // Wrong pixel format check.
-    error_code = tga_create(&image, 32, 32, (enum tga_pixel_format)100);
+    error_code = tga_create(&data, &info, 32, 32, (enum tga_pixel_format)100);
     assert(error_code == TGA_ERROR_UNSUPPORTED_PIXEL_FORMAT);
 
-    error_code = tga_create(&image, 128, 128, TGA_PIXEL_RGB24);
+    error_code = tga_create(&data, &info, 128, 128, TGA_PIXEL_RGB24);
     assert(error_code == TGA_NO_ERROR);
-    tga_free(image);
+    tga_free_data(data);
+    tga_free_info(info);
 }
 
 static void load_test(void) {
@@ -86,16 +89,19 @@ static void load_test(void) {
         strcat(image_name, image_name_list[loop]);
 
         // Load the image and check the file information.
-        tga_image *image;
-        enum tga_error error_code = tga_load(&image, image_name);
+        uint8_t *data;
+        tga_info *info;
+        enum tga_error error_code = tga_load(&data, &info, image_name);
         assert(error_code == TGA_NO_ERROR);
-        if (image->width != image_dimension ||
-            image->height != image_dimension ||
-            image->pixel_format != pixel_formats[loop]) {
-            tga_free(image);
+        if (tga_get_image_width(info) != image_dimension ||
+            tga_get_image_height(info) != image_dimension ||
+            tga_get_pixel_format(info) != pixel_formats[loop]) {
+            tga_free_data(data);
+            tga_free_info(info);
             break;
         }
-        tga_free(image);
+        tga_free_data(data);
+        tga_free_info(info);
     }
     assert(loop == image_count);
 }
