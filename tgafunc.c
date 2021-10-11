@@ -28,8 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_IMAGE_DIMENSISN 65535
-
 struct tga_info {
     uint16_t width, height;
     enum tga_pixel_format pixel_format;
@@ -48,8 +46,8 @@ static enum tga_error save_image(const uint8_t *data, const tga_info *info,
 
 enum tga_error tga_create(uint8_t **data_out, tga_info **info_out, int width,
                           int height, enum tga_pixel_format format) {
-    if (width <= 0 || width > MAX_IMAGE_DIMENSISN || height <= 0 ||
-        height > MAX_IMAGE_DIMENSISN) {
+    if (width <= 0 || width > TGA_MAX_IMAGE_DIMENSISNS || height <= 0 ||
+        height > TGA_MAX_IMAGE_DIMENSISNS) {
         return TGA_ERROR_INVALID_IMAGE_DIMENSISN;
     }
     int pixel_size = pixel_format_to_pixel_size(format);
@@ -361,7 +359,7 @@ static enum tga_error load_header(struct tga_header *header,
         return TGA_ERROR_UNSUPPORTED_IMAGE_TYPE;
     }
     if (header->image_width <= 0 || header->image_height <= 0) {
-        // No need to check if the image size exceeds MAX_IMAGE_DIMENSISN.
+        // No need to check if the image size exceeds TGA_MAX_IMAGE_DIMENSISNS.
         return TGA_ERROR_INVALID_IMAGE_DIMENSISN;
     }
     if (get_pixel_format(pixel_format, header)) {

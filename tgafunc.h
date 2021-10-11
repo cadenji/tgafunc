@@ -25,6 +25,8 @@
 
 #include <stdint.h>
 
+#define TGA_MAX_IMAGE_DIMENSISNS 65535
+
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
@@ -101,8 +103,10 @@ typedef struct tga_info tga_info;
 ///                 to 0x0. Uses tga_free_data() to release.
 /// \param info_out Returns the information of the image. Uses tga_free_info()
 ///                 to release.
-/// \param width The width of the image.
-/// \param height The height of the image.
+/// \param width The width of the image, the value cannot be less than 1 or
+///              greater than TGA_MAX_IMAGE_DIMENSISNS.
+/// \param height The height of the image. the value cannot be less than 1 or
+///               greater than TGA_MAX_IMAGE_DIMENSISNS.
 /// \param format The pixel data of the image.
 /// \return enum tga_error The result of the creation.
 ///

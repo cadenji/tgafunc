@@ -43,14 +43,14 @@ static void create_test(void) {
     uint8_t *data;
     tga_info *info;
     enum tga_error error_code;
-    int oversize = 65535 + 1;
+    int oversize = TGA_MAX_IMAGE_DIMENSISNS + 1;
 
     // image size cannot be less than 1.
     error_code = tga_create(&data, &info, 0, 32, TGA_PIXEL_RGB24);
     assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
     error_code = tga_create(&data, &info, 32, 0, TGA_PIXEL_RGB24);
     assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
-    // Image size cannot be greater than 65535.
+    // Image size cannot be greater than TGA_MAX_IMAGE_DIMENSISNS.
     error_code = tga_create(&data, &info, oversize, 32, TGA_PIXEL_RGB24);
     assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
     error_code = tga_create(&data, &info, 32, oversize, TGA_PIXEL_RGB24);
