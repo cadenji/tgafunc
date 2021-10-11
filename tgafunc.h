@@ -25,6 +25,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif  // __cplusplus
+
 ///
 /// \brief Image pixel format.
 /// The pixel data are all in little-endian. E.g. a TGA_PIXEL_ARGB32 format
@@ -210,5 +214,9 @@ void tga_image_flip_h(uint8_t *data, const tga_info *info);
 /// \param info The structure which contains the image information.
 ///
 void tga_image_flip_v(uint8_t *data, const tga_info *info);
+
+#ifdef __cplusplus
+}
+#endif  //__cplusplus
 
 #endif  // TGAFUNC_H_
