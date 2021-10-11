@@ -393,37 +393,38 @@ static inline bool try_get_color_from_map(uint8_t *dest, uint16_t index,
 static enum tga_error decode_data(uint8_t *data, const tga_info *info,
                                   uint8_t pixel_size, bool is_color_mapped,
                                   const struct color_map *map, FILE *file) {
+    enum tga_error error_code = TGA_NO_ERROR;
     size_t pixel_count = (size_t)info->width * info->height;
+
     if (is_color_mapped) {
         for (; pixel_count > 0; --pixel_count) {
             if (fread(data, 1, pixel_size, file) != pixel_size) {
+                error_code = TGA_ERROR_FILE_CANNOT_READ;
                 break;
             }
             // In color mapped image, the pixel as the index value of the color
             // map. The actual pixel value is found from the color map.
             uint16_t index = pixel_to_map_index(data);
             if (try_get_color_from_map(data, index, map)) {
+                error_code = TGA_ERROR_COLOR_MAP_INDEX_FAILED;
                 break;
             }
             data += map->bytes_per_entry;
         }
-        if (pixel_count != 0) {
-            // TODO: add color map index error.
-            return TGA_ERROR_FILE_CANNOT_READ;
-        }
     } else {
         size_t data_size = pixel_count * pixel_size;
         if (fread(data, 1, data_size, file) != data_size) {
-            return TGA_ERROR_FILE_CANNOT_READ;
+            error_code = TGA_ERROR_FILE_CANNOT_READ;
         }
     }
-    return TGA_NO_ERROR;
+    return error_code;
 }
 
 // Decode image data with run-length encoding from file stream.
 static enum tga_error decode_data_rle(uint8_t *data, const tga_info *info,
                                       uint8_t pixel_size, bool is_color_mapped,
                                       const struct color_map *map, FILE *file) {
+    enum tga_error error_code = TGA_NO_ERROR;
     size_t pixel_count = (size_t)info->width * info->height;
     bool is_run_length_packet = false;
     uint8_t packet_count = 0;
@@ -436,12 +437,14 @@ static enum tga_error decode_data_rle(uint8_t *data, const tga_info *info,
         if (packet_count == 0) {
             uint8_t repetition_count_field;
             if (fread(&repetition_count_field, 1, 1, file) != 1) {
+                error_code = TGA_ERROR_FILE_CANNOT_READ;
                 break;
             }
             is_run_length_packet = repetition_count_field & 0x80;
             packet_count = (repetition_count_field & 0x7F) + 1;
             if (is_run_length_packet) {
                 if (fread(pixel_buffer, 1, pixel_size, file) != pixel_size) {
+                    error_code = TGA_ERROR_FILE_CANNOT_READ;
                     break;
                 }
                 if (is_color_mapped) {
@@ -450,6 +453,7 @@ static enum tga_error decode_data_rle(uint8_t *data, const tga_info *info,
                     // color map.
                     uint16_t index = pixel_to_map_index(pixel_buffer);
                     if (try_get_color_from_map(pixel_buffer, index, map)) {
+                        error_code = TGA_ERROR_COLOR_MAP_INDEX_FAILED;
                         break;
                     }
                 }
@@ -460,6 +464,7 @@ static enum tga_error decode_data_rle(uint8_t *data, const tga_info *info,
             memcpy(data, pixel_buffer, data_element_size);
         } else {
             if (fread(data, 1, pixel_size, file) != pixel_size) {
+                error_code = TGA_ERROR_FILE_CANNOT_READ;
                 break;
             }
             if (is_color_mapped) {
@@ -468,6 +473,7 @@ static enum tga_error decode_data_rle(uint8_t *data, const tga_info *info,
                 // map.
                 uint16_t index = pixel_to_map_index(data);
                 if (try_get_color_from_map(data, index, map)) {
+                    error_code = TGA_ERROR_COLOR_MAP_INDEX_FAILED;
                     break;
                 }
             }
@@ -476,12 +482,7 @@ static enum tga_error decode_data_rle(uint8_t *data, const tga_info *info,
         --packet_count;
         data += data_element_size;
     }
-
-    if (pixel_count != 0) {
-        // TODO: add color map index error.
-        return TGA_ERROR_FILE_CANNOT_READ;
-    }
-    return TGA_NO_ERROR;
+    return error_code;
 }
 
 static enum tga_error load_image(uint8_t **data_out, tga_info **info_out,
