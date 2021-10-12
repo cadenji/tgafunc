@@ -139,6 +139,7 @@ enum tga_error tga_load(uint8_t **data_out, tga_info **info_out,
 
 ///
 /// \brief Saves TGA image to file.
+/// Note that if a file with the same name already exists, the save will fail.
 /// If data or info is a null pointer, the function does nothing.
 ///
 /// \param data The data of the image.
@@ -185,6 +186,10 @@ uint8_t tga_get_bytes_per_pixel(const tga_info *info);
 ///
 /// \brief Returns the pointer to the pixel at coordinates (x,y) in the data for
 ///        reading or writing.
+/// Note that the pixel data are all little-endian, e.g. a TGA_PIXEL_ARGB32
+/// format image, a single pixel is stored in the memory in the order of
+/// BBBBBBBB GGGGGGGG RRRRRRRR AAAAAAAA.
+///
 /// The coordinates start at upper left corner. If the pixel coordinates are out
 /// of bounds (larger than width/height or small than 0), they will be clamped.
 ///
