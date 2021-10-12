@@ -38,8 +38,8 @@ static inline int pixel_format_to_pixel_size(enum tga_pixel_format format);
 static enum tga_error load_image(uint8_t **data_out, tga_info **info_out,
                                  FILE *file);
 
-static uint8_t *get_pixel_pointer(uint8_t *data, const tga_info *info, int x,
-                                  int y);
+static inline uint8_t *get_pixel(uint8_t *data, const tga_info *info, int x,
+                                 int y);
 
 static enum tga_error save_image(const uint8_t *data, const tga_info *info,
                                  FILE *file);
@@ -121,6 +121,10 @@ uint8_t tga_get_bytes_per_pixel(const tga_info *info) {
     return pixel_format_to_pixel_size(info->pixel_format);
 }
 
+uint8_t *tga_get_pixel(uint8_t *data, const tga_info *info, int x, int y) {
+    return get_pixel(data, info, x, y);
+}
+
 void tga_free_data(uint8_t *data) { free(data); }
 
 void tga_free_info(tga_info *info) { free(info); }
@@ -136,8 +140,8 @@ void tga_image_flip_h(uint8_t *data, const tga_info *info) {
     int flip_num = info->width / 2;
     for (int i = 0; i < flip_num; ++i) {
         for (int j = 0; j < info->height; ++j) {
-            uint8_t *p1 = get_pixel_pointer(data, info, i, j);
-            uint8_t *p2 = get_pixel_pointer(data, info, info->width - 1 - i, j);
+            uint8_t *p1 = get_pixel(data, info, i, j);
+            uint8_t *p2 = get_pixel(data, info, info->width - 1 - i, j);
             // Swap two pixels.
             memcpy(temp, p1, pixel_size);
             memcpy(p1, p2, pixel_size);
@@ -157,9 +161,8 @@ void tga_image_flip_v(uint8_t *data, const tga_info *info) {
     int flip_num = info->height / 2;
     for (int i = 0; i < flip_num; ++i) {
         for (int j = 0; j < info->width; ++j) {
-            uint8_t *p1 = get_pixel_pointer(data, info, j, i);
-            uint8_t *p2 =
-                get_pixel_pointer(data, info, j, info->height - 1 - i);
+            uint8_t *p1 = get_pixel(data, info, j, i);
+            uint8_t *p2 = get_pixel(data, info, j, info->height - 1 - i);
             // Swap two pixels.
             memcpy(temp, p1, pixel_size);
             memcpy(p1, p2, pixel_size);
@@ -565,11 +568,11 @@ static enum tga_error load_image(uint8_t **data_out, tga_info **info_out,
     return TGA_NO_ERROR;
 }
 
-// Gets raw pixel data from image data for reading or writing.
+// Returns the pixel at coordinates (x,y) for reading or writing.
 // If the pixel coordinates are out of bounds (larger than width/height
 // or small than 0), they will be clamped.
-static uint8_t *get_pixel_pointer(uint8_t *data, const tga_info *info, int x,
-                                  int y) {
+static inline uint8_t *get_pixel(uint8_t *data, const tga_info *info, int x,
+                                 int y) {
     if (x < 0) {
         x = 0;
     } else if (x >= info->width) {

@@ -183,6 +183,22 @@ enum tga_pixel_format tga_get_pixel_format(const tga_info *info);
 uint8_t tga_get_bytes_per_pixel(const tga_info *info);
 
 ///
+/// \brief Returns the pointer to the pixel at coordinates (x,y) in the data for
+///        reading or writing.
+/// The coordinates start at upper left corner. If the pixel coordinates are out
+/// of bounds (larger than width/height or small than 0), they will be clamped.
+///
+/// \param data The data pointer of the inmage.
+/// \param info The tga_info structure of the image.
+/// \param x The x coordinate of the pixel.
+/// \param y The y coordinate of the pixel
+/// \return uint8_t* Pointer to the lowest byte of the pixel, the pixel byte
+///                  size can be obtained by the tga_get_bytes_per_pixel()
+///                  function.
+///
+uint8_t *tga_get_pixel(uint8_t *data, const tga_info *info, int x, int y);
+
+///
 /// \brief Releases the image data.
 /// Releases the memory previously allocated by tga_load() or tga_create().
 /// If the data is a null pointer, the function does nothing.
