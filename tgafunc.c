@@ -125,7 +125,7 @@ uint8_t *tga_get_pixel(uint8_t *data, const tga_info *info, int x, int y) {
     return get_pixel(data, info, x, y);
 }
 
-void tga_free_data(uint8_t *data) { free(data); }
+void tga_free_data(void *data) { free(data); }
 
 void tga_free_info(tga_info *info) { free(info); }
 

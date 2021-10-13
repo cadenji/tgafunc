@@ -210,7 +210,7 @@ uint8_t *tga_get_pixel(uint8_t *data, const tga_info *info, int x, int y);
 ///
 /// \param data The data to be released.
 ///
-void tga_free_data(uint8_t *data);
+void tga_free_data(void *data);
 
 ///
 /// \brief Releases the tga_info structure.
