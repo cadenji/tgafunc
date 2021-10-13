@@ -46,8 +46,8 @@ int main(int argc, char *argv[]) {
 You can use the `tga_create()` function to create an image. You can directly
 manipulate image data, e.g. use standard functions to assign values to the
 entire image data. Or use `tga_get_pixel()` function to read and write a pixel.
-Finally use the `tga_save()` function to save as a TGA file (Don't forget to
-release `data` and `info` as well).
+Finally use the `tga_save_from_info()` function to save as a TGA file (Don't
+forget to release `data` and `info` as well):
 
 ```c
 #include <stdint.h>
@@ -74,13 +74,13 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width / 2; j++) {
                 pixel = tga_get_pixel(data, info, j, i);
-                pixel[0] = 0xFF;
-                pixel[1] = 0x00;
-                pixel[2] = 0xFF;
+                pixel[0] = 0xFF; // Blue channel.
+                pixel[1] = 0x00; // Green channel.
+                pixel[2] = 0xFF; // Red channel.
             }
         }
         // Saves the image as a TGA file.
-        error_code = tga_save(data, info, "magenta_white.tga");
+        error_code = tga_save_from_info(data, info, "magenta_white.tga");
         if (error_code == TGA_NO_ERROR) {
             printf("Image saved successfully\n");
         } else {

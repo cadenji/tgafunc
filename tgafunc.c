@@ -33,6 +33,8 @@ struct tga_info {
     enum tga_pixel_format pixel_format;
 };
 
+static inline bool check_dimensions(int width, int height);
+
 static inline int pixel_format_to_pixel_size(enum tga_pixel_format format);
 
 static enum tga_error load_image(uint8_t **data_out, tga_info **info_out,
@@ -46,9 +48,8 @@ static enum tga_error save_image(const uint8_t *data, const tga_info *info,
 
 enum tga_error tga_create(uint8_t **data_out, tga_info **info_out, int width,
                           int height, enum tga_pixel_format format) {
-    if (width <= 0 || width > TGA_MAX_IMAGE_DIMENSISNS || height <= 0 ||
-        height > TGA_MAX_IMAGE_DIMENSISNS) {
-        return TGA_ERROR_INVALID_IMAGE_DIMENSISN;
+    if (check_dimensions(width, height)) {
+        return TGA_ERROR_INVALID_IMAGE_DIMENSIONS;
     }
     int pixel_size = pixel_format_to_pixel_size(format);
     if (pixel_size == -1) {
@@ -85,8 +86,17 @@ enum tga_error tga_load(uint8_t **data_out, tga_info **info_out,
     return error_code;
 }
 
-enum tga_error tga_save(const uint8_t *data, const tga_info *info,
-                        const char *file_name) {
+enum tga_error tga_save(const uint8_t *data, int width, int height,
+                        enum tga_pixel_format format, const char *file_name) {
+    if (check_dimensions(width, height)) {
+        return TGA_ERROR_INVALID_IMAGE_DIMENSIONS;
+    }
+    tga_info info = {width, height, format};
+    return tga_save_from_info(data, &info, file_name);
+}
+
+enum tga_error tga_save_from_info(const uint8_t *data, const tga_info *info,
+                                  const char *file_name) {
     if (data == NULL || info == NULL) {
         return TGA_ERROR_NO_DATA;
     }
@@ -261,8 +271,15 @@ static inline uint16_t read_uint16_le(FILE *file) {
     return buffer[0] + (((uint16_t)buffer[1]) << 8);
 }
 
+// Checks if the picture size is correct.
+// Returns true if invalid dimensisns, otherwise returns false.
+static inline bool check_dimensions(int width, int height) {
+    return width <= 0 || width > TGA_MAX_IMAGE_DIMENSIONS || height <= 0 ||
+           height > TGA_MAX_IMAGE_DIMENSIONS;
+}
+
 // Gets the bytes per pixel by pixel format.
-// Returns bytes per pxiel, otherwise return -1 means the parameter `format` is
+// Returns bytes per pxiel, otherwise returns -1 means the parameter `format` is
 // invalid.
 static inline int pixel_format_to_pixel_size(enum tga_pixel_format format) {
     switch (format) {
@@ -362,8 +379,8 @@ static enum tga_error load_header(struct tga_header *header,
         return TGA_ERROR_UNSUPPORTED_IMAGE_TYPE;
     }
     if (header->image_width <= 0 || header->image_height <= 0) {
-        // No need to check if the image size exceeds TGA_MAX_IMAGE_DIMENSISNS.
-        return TGA_ERROR_INVALID_IMAGE_DIMENSISN;
+        // No need to check if the image size exceeds TGA_MAX_IMAGE_DIMENSIONS.
+        return TGA_ERROR_INVALID_IMAGE_DIMENSIONS;
     }
     if (get_pixel_format(pixel_format, header)) {
         return TGA_ERROR_UNSUPPORTED_PIXEL_FORMAT;

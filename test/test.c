@@ -33,22 +33,22 @@ static void create_test(void) {
     tga_info *info;
     enum tga_error error_code;
     int size = 4;
-    int oversize = TGA_MAX_IMAGE_DIMENSISNS + 1;
+    int oversize = TGA_MAX_IMAGE_DIMENSIONS + 1;
 
     // image size cannot be less than 1.
     error_code = tga_create(&data, &info, 0, size, TGA_PIXEL_RGB24);
-    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
+    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSIONS);
     error_code = tga_create(&data, &info, size, 0, TGA_PIXEL_RGB24);
-    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
+    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSIONS);
     error_code = tga_create(&data, &info, -1, size, TGA_PIXEL_RGB24);
-    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
+    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSIONS);
     error_code = tga_create(&data, &info, size, -1, TGA_PIXEL_RGB24);
-    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
+    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSIONS);
     // Image size cannot be greater than TGA_MAX_IMAGE_DIMENSISNS.
     error_code = tga_create(&data, &info, oversize, size, TGA_PIXEL_RGB24);
-    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
+    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSIONS);
     error_code = tga_create(&data, &info, size, oversize, TGA_PIXEL_RGB24);
-    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSISN);
+    assert(error_code == TGA_ERROR_INVALID_IMAGE_DIMENSIONS);
     // Wrong pixel format check.
     error_code =
         tga_create(&data, &info, size, size, (enum tga_pixel_format)100);

@@ -25,7 +25,7 @@
 
 #include <stdint.h>
 
-#define TGA_MAX_IMAGE_DIMENSISNS 65535
+#define TGA_MAX_IMAGE_DIMENSIONS 65535
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,12 +75,12 @@ enum tga_error {
     TGA_ERROR_UNSUPPORTED_COLOR_MAP_TYPE,
     TGA_ERROR_UNSUPPORTED_IMAGE_TYPE,
     TGA_ERROR_UNSUPPORTED_PIXEL_FORMAT,
-    TGA_ERROR_INVALID_IMAGE_DIMENSISN,
+    TGA_ERROR_INVALID_IMAGE_DIMENSIONS,
     TGA_ERROR_COLOR_MAP_INDEX_FAILED
 };
 
 ///
-/// \brief Structure for saving TGA image information.
+/// \brief Structure for saving image information.
 ///
 typedef struct tga_info tga_info;
 
@@ -95,7 +95,7 @@ typedef struct tga_info tga_info;
 /// error_code = tga_create(&image_data, &image_info, 128, 128,
 ///                         TGA_PIXEL_RGB24);
 /// if (error_code == TGA_NO_ERROR) {
-///     // Use the created image.
+///     // Use the created image...
 /// }
 /// ```
 ///
@@ -107,14 +107,14 @@ typedef struct tga_info tga_info;
 ///              greater than TGA_MAX_IMAGE_DIMENSISNS.
 /// \param height The height of the image. the value cannot be less than 1 or
 ///               greater than TGA_MAX_IMAGE_DIMENSISNS.
-/// \param format The pixel data of the image.
+/// \param format Image pixel format.
 /// \return enum tga_error The result of the creation.
 ///
 enum tga_error tga_create(uint8_t **data_out, tga_info **info_out, int width,
                           int height, enum tga_pixel_format format);
 
 ///
-/// \brief Loads TGA image from file.
+/// \brief Loads image data and information from TGA format file.
 /// The coordinates of the image start from the upper left corner. Image pixel
 /// data is stored in a 1-dimensional array in a row major order.
 /// ```
@@ -131,24 +131,47 @@ enum tga_error tga_create(uint8_t **data_out, tga_info **info_out, int width,
 ///                 release.
 /// \param info_out Returns the information of the image. Uses tga_free_info()
 ///                 to release.
-/// \param file_name The TGA image file name to be loaded.
+/// \param file_name The TGA format file name to be loaded.
 /// \return enum tga_error The result of loading the image.
 ///
 enum tga_error tga_load(uint8_t **data_out, tga_info **info_out,
                         const char *file_name);
 
 ///
-/// \brief Saves TGA image to file.
+/// \brief Saves a image data as a TGA format file.
+/// Same function as tga_save_from_info(). Generally used when the tga_info
+/// structure has been released, or directly save the externally generated image
+/// data as a TGA format file.
+///
+/// Note that if a file with the same name already exists, the save will fail.
+/// If data or info is a null pointer, the function does nothing.
+/// 
+/// \param data The data of the image.
+/// \param width The width of the image, the value cannot be less than 1 or
+///              greater than TGA_MAX_IMAGE_DIMENSISNS.
+/// \param height The height of the image. the value cannot be less than 1 or
+///               greater than TGA_MAX_IMAGE_DIMENSISNS.
+/// \param format Image pixel format.
+/// \param file_name The name of the image file to be created.
+/// \return enum tga_error The result of saving the image.
+///
+enum tga_error tga_save(const uint8_t *data, int width, int height,
+                        enum tga_pixel_format format, const char *file_name);
+
+///
+/// \brief Saves a image data as a TGA format file.
+/// Is the simplified parameter form of the tga_save() function.
+///
 /// Note that if a file with the same name already exists, the save will fail.
 /// If data or info is a null pointer, the function does nothing.
 ///
 /// \param data The data of the image.
 /// \param info The tga_info structure of the image.
 /// \param file_name The name of the image file to be created.
-/// \return enum tga_error he result of saving the image.
+/// \return enum tga_error The result of saving the image.
 ///
-enum tga_error tga_save(const uint8_t *data, const tga_info *info,
-                        const char *file_name);
+enum tga_error tga_save_from_info(const uint8_t *data, const tga_info *info,
+                                  const char *file_name);
 
 ///
 /// \brief Gets the image width.
