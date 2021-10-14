@@ -144,9 +144,7 @@ void tga_image_flip_h(uint8_t *data, const tga_info *info) {
         return;
     }
     int pixel_size = pixel_format_to_pixel_size(info->pixel_format);
-    // The maximum possible number of bytes for a pixel is 4.
-    // See also pixel_format_to_pixel_size() function.
-    uint8_t temp[4];
+    uint8_t temp[pixel_size];
     int flip_num = info->width / 2;
     for (int i = 0; i < flip_num; ++i) {
         for (int j = 0; j < info->height; ++j) {
@@ -165,9 +163,7 @@ void tga_image_flip_v(uint8_t *data, const tga_info *info) {
         return;
     }
     int pixel_size = pixel_format_to_pixel_size(info->pixel_format);
-    // The maximum possible number of bytes for a pixel is 4.
-    // See also pixel_format_to_pixel_size() function.
-    uint8_t temp[4];
+    uint8_t temp[pixel_size];
     int flip_num = info->height / 2;
     for (int i = 0; i < flip_num; ++i) {
         for (int j = 0; j < info->width; ++j) {
@@ -299,10 +295,6 @@ static inline int pixel_format_to_pixel_size(enum tga_pixel_format format) {
 
 // Gets the pixel format according to the header.
 // Returns false means the header is not illegal, otherwise returns true.
-//
-// NOTE: if the supported values of map_entry_size and pixel_depth change.
-// Will have a huge impact on decode_data(), decode_data_rle() and
-// pixel_to_map_index() functions.
 static bool get_pixel_format(enum tga_pixel_format *format,
                              const struct tga_header *header) {
     if (IS_COLOR_MAPPED(*header)) {
