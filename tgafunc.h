@@ -33,6 +33,7 @@ extern "C" {
 
 ///
 /// \brief Image pixel format.
+///
 /// The pixel data are all in little-endian. E.g. a TGA_PIXEL_ARGB32 format
 /// image, a single pixel is stored in the memory in the order of
 /// BBBBBBBB GGGGGGGG RRRRRRRR AAAAAAAA.
@@ -86,6 +87,7 @@ typedef struct tga_info tga_info;
 
 ///
 /// \brief Creates a empty image.
+///
 /// The coordinates of the image start from the upper left corner. Image pixel
 /// data is stored in a 1-dimensional array in a row major order.
 /// ```
@@ -108,13 +110,14 @@ typedef struct tga_info tga_info;
 /// \param height The height of the image. the value cannot be less than 1 or
 ///               greater than TGA_MAX_IMAGE_DIMENSISNS.
 /// \param format Image pixel format.
-/// \return enum tga_error The result of the creation.
+/// \return The result of the creation.
 ///
 enum tga_error tga_create(uint8_t **data_out, tga_info **info_out, int width,
                           int height, enum tga_pixel_format format);
 
 ///
 /// \brief Loads image data and information from TGA format file.
+///
 /// The coordinates of the image start from the upper left corner. Image pixel
 /// data is stored in a 1-dimensional array in a row major order.
 /// ```
@@ -132,13 +135,14 @@ enum tga_error tga_create(uint8_t **data_out, tga_info **info_out, int width,
 /// \param info_out Returns the information of the image. Uses tga_free_info()
 ///                 to release.
 /// \param file_name The TGA format file name to be loaded.
-/// \return enum tga_error The result of loading the image.
+/// \return The result of loading the image.
 ///
 enum tga_error tga_load(uint8_t **data_out, tga_info **info_out,
                         const char *file_name);
 
 ///
 /// \brief Saves a image data as a TGA format file.
+///
 /// Same function as tga_save_from_info(). Generally used when the tga_info
 /// structure has been released, or directly save the externally generated image
 /// data as a TGA format file.
@@ -153,13 +157,14 @@ enum tga_error tga_load(uint8_t **data_out, tga_info **info_out,
 ///               greater than TGA_MAX_IMAGE_DIMENSISNS.
 /// \param format Image pixel format.
 /// \param file_name The name of the image file to be created.
-/// \return enum tga_error The result of saving the image.
+/// \return The result of saving the image.
 ///
 enum tga_error tga_save(const uint8_t *data, int width, int height,
                         enum tga_pixel_format format, const char *file_name);
 
 ///
 /// \brief Saves a image data as a TGA format file.
+///
 /// Is the simplified parameter form of the tga_save() function.
 ///
 /// Note that if a file with the same name already exists, the save will fail.
@@ -168,7 +173,7 @@ enum tga_error tga_save(const uint8_t *data, int width, int height,
 /// \param data The data of the image.
 /// \param info The tga_info structure of the image.
 /// \param file_name The name of the image file to be created.
-/// \return enum tga_error The result of saving the image.
+/// \return The result of saving the image.
 ///
 enum tga_error tga_save_from_info(const uint8_t *data, const tga_info *info,
                                   const char *file_name);
@@ -177,7 +182,7 @@ enum tga_error tga_save_from_info(const uint8_t *data, const tga_info *info,
 /// \brief Gets the image width.
 ///
 /// \param info The tga_info structure of the image.
-/// \return int The width of the image.
+/// \return The width of the image.
 ///
 int tga_get_image_width(const tga_info *info);
 
@@ -185,7 +190,7 @@ int tga_get_image_width(const tga_info *info);
 /// \brief Gets the image height.
 ///
 /// \param info The tga_info structure of the image.
-/// \return int The height of the image.
+/// \return The height of the image.
 ///
 int tga_get_image_height(const tga_info *info);
 
@@ -193,7 +198,7 @@ int tga_get_image_height(const tga_info *info);
 /// \brief Gets the image pixel format.
 ///
 /// \param info The tga_info structure of the image.
-/// \return enum tga_pixel_format The pixel format of the image.
+/// \return The pixel format of the image.
 ///
 enum tga_pixel_format tga_get_pixel_format(const tga_info *info);
 
@@ -202,13 +207,14 @@ enum tga_pixel_format tga_get_pixel_format(const tga_info *info);
 ///        format.
 ///
 /// \param info The tga_info structure of the image.
-/// \return uint8_t The number of bytes per pixel.
+/// \return The number of bytes per pixel.
 ///
 uint8_t tga_get_bytes_per_pixel(const tga_info *info);
 
 ///
 /// \brief Returns the pointer to the pixel at coordinates (x,y) in the data for
 ///        reading or writing.
+///
 /// Note that the pixel data are all little-endian, e.g. a TGA_PIXEL_ARGB32
 /// format image, a single pixel is stored in the memory in the order of
 /// BBBBBBBB GGGGGGGG RRRRRRRR AAAAAAAA.
@@ -220,14 +226,14 @@ uint8_t tga_get_bytes_per_pixel(const tga_info *info);
 /// \param info The tga_info structure of the image.
 /// \param x The x coordinate of the pixel.
 /// \param y The y coordinate of the pixel
-/// \return uint8_t* Pointer to the lowest byte of the pixel, the pixel byte
-///                  size can be obtained by the tga_get_bytes_per_pixel()
-///                  function.
+/// \return Pointer to the lowest byte of the pixel, the pixel byte size can be
+///         obtained by the tga_get_bytes_per_pixel() function.
 ///
 uint8_t *tga_get_pixel(uint8_t *data, const tga_info *info, int x, int y);
 
 ///
 /// \brief Releases the image data.
+///
 /// Releases the memory previously allocated by tga_load() or tga_create().
 /// If the data is a null pointer, the function does nothing.
 ///
@@ -237,6 +243,7 @@ void tga_free_data(void *data);
 
 ///
 /// \brief Releases the tga_info structure.
+///
 /// Releases the memory previously allocated by tga_load() or tga_create().
 /// If the info is a null pointer, the function does nothing.
 ///
@@ -246,6 +253,7 @@ void tga_free_info(tga_info *info);
 
 ///
 /// \brief Flips the image horizontally.
+///
 /// Rearranges the order of pixels in data. If data or info is a null pointer,
 /// the function does nothing.
 ///
@@ -256,6 +264,7 @@ void tga_image_flip_h(uint8_t *data, const tga_info *info);
 
 ///
 /// \brief Flip the image vertically.
+///
 /// Rearranges the order of pixels in data. If data or info is a null pointer,
 /// the function does nothing.
 ///
